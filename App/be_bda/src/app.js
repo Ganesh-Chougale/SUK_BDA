@@ -3,12 +3,35 @@ const cors = require('cors');
 require('dotenv').config();
 const morgan = require('morgan');
 const createError = require('http-errors');
-const winston = require('./config/winston'); // We'll create this next
-
+const winston = require('./config/winston');
 const app = express();
 
-// Middleware
-app.use(cors());
+
+// Import routes
+const authRoutes = require('./routes/auth.routes');
+
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://127.0.0.1:3000',
+  process.env.FRONTEND_URL,
+];
+
+const corsOptions = {
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+};
+app.use(cors(corsOptions));
+
+// Middleware◘
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -20,6 +43,9 @@ app.get('/', (req, res) => {
   res.json({ message: 'Welcome to BDA Backend API' });
 });
 
+// Use routes
+app.use('/api/auth', authRoutes);
+
 // 404 handler
 app.use((req, res, next) => {
   next(createError.NotFound('Route not found'));
@@ -27,14 +53,9 @@ app.use((req, res, next) => {
 
 // Error handler middleware
 app.use((err, req, res, next) => {
-  // Set locals, only providing error in development
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
-
-  // Add this line to include winston logging
   winston.error(`${err.status || 500} - ${err.message} - ${req.originalUrl} - ${req.method} - ${req.ip}`);
-
-  // Send error response
   res.status(err.status || 500).json({
     status: false,
     message: err.message,
