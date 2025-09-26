@@ -25,13 +25,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     const storedToken = localStorage.getItem('userToken');
-    const storedUser = localStorage.getItem('user');
-
-    if (storedToken && storedUser) {
-      setToken(storedToken);
-      setUser(JSON.parse(storedUser));
+    if (storedToken) {
+      axios.get(`${API_BASE_URL}/api/auth/me`, {
+        headers: { Authorization: `Bearer ${storedToken}` },
+      })
+      .then(res => {
+        setUser(res.data.user);
+        setToken(storedToken);
+      })
+      .catch(() => {
+        logout(); // token invalid
+      })
+      .finally(() => setLoading(false));
+    } else {
+      setLoading(false);
     }
-    setLoading(false);
   }, []);
 
   const loginWithGoogle = async (googleIdToken: string) => {

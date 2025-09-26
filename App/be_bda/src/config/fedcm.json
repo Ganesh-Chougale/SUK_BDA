@@ -1,0 +1,6 @@
+{
+    "accounts_endpoint": "/api/auth/fedcm-accounts",
+    "client_metadata_endpoint": "/api/auth/fedcm-client_metadata",
+    "id_assertion_endpoint": "/api/auth/google-login",
+    "revocation_endpoint": "/api/auth/fedcm-revocation"
+  }
